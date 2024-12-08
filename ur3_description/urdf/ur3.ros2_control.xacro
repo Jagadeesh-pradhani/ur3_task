@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="ur3_ros2_control" params="name prefix">
+
+    <ros2_control name="${name}" type="system">
+
+      <!-- add controller info here -->
+
+    </ros2_control>
+
+  </xacro:macro>
+
+</robot>
