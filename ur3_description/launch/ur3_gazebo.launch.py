@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
@@ -178,21 +178,49 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=["joint_state_broadcaster",],
     )
 
-    # joint_broad_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["joint_state_broadcaster"],
-    # )
+    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
+    controller_manager = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[robot_description,
+                    initial_joint_controllers]
+    )
 
-    # delayed_joint_broad_spawner = RegisterEventHandler(
-    #     event_handler=OnProcessStart(
-    #         target_action=controller_manager,
-    #         on_start=[joint_broad_spawner],
-    #     )
-    # )
+    delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager])
+
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster"],
+    )
+
+    delayed_joint_broad_spawner = RegisterEventHandler(
+        event_handler=OnProcessStart(
+            target_action=controller_manager,
+            on_start=[joint_broad_spawner],
+        )
+    )
+
+    joint_trajectory_controller_spawner = Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=[
+            'joint_trajectory_controller',
+            '--param-file',
+            initial_joint_controllers,
+            ],
+    )
+
+    delayed_joint_trajectory_controller_spawner = RegisterEventHandler(
+        event_handler=OnProcessStart(
+            target_action=controller_manager,
+            on_start=[joint_trajectory_controller_spawner],
+        )
+    )
+
 
     # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
@@ -219,13 +247,18 @@ def generate_launch_description():
     nodes = [
         gazebo,
         robot_state_publisher_node,
+        joint_state_broadcaster_spawner,
         spawn_pedestal,
         spawn_table,
         spawn_cube,
         spawn_robot,
-        # joint_state_broadcaster_spawner,
-        # initial_joint_controller_spawner_stopped,
-        # initial_joint_controller_spawner_started,
+        initial_joint_controller_spawner_stopped,
+        initial_joint_controller_spawner_started,
+        # delayed_controller_manager,
+        # delayed_joint_broad_spawner,
+        # delayed_joint_trajectory_controller_spawner,
+        
+
     ]
 
     return LaunchDescription(declared_arguments + nodes)

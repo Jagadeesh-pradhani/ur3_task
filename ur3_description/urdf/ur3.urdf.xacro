@@ -65,7 +65,7 @@
    </xacro:ur_robot>
 
    <!-- call ur3 ros2_control macro -->
-   <xacro:ur3_ros2_control name="$(arg name)" prefix="$(arg prefix)"/>
+   <xacro:ur3_ros2_control name="$(arg name)" prefix="$(arg prefix)" initial_positions="${xacro.load_yaml(initial_positions_file)}"/>
 
    <!-- gazebo classic plugin -->
    <xacro:include filename="$(find ur3_description)/urdf/ur3.gazebo.xacro" />

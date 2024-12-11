@@ -4,5 +4,11 @@
   <gazebo>
     <!-- add plugin info here -->
   </gazebo>
+  <gazebo>
+    <!-- Joint state publisher -->
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find ur3_description)/config/ur3_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
 
 </robot>
