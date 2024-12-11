@@ -4,10 +4,33 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch.event_handlers import OnProcessStart
+from launch.actions import RegisterEventHandler
+from launch.conditions import IfCondition, UnlessCondition
 
 
 def generate_launch_description():
+    
+
     declared_arguments = []
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "controllers_file",
+            default_value="ur3_controllers.yaml",
+            description="controller",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "runtime_config_package",
+            default_value="ur3_description",
+            description='Package with the controller\'s configuration in "config" folder. \
+        Usually the argument is not set, it enables use of a custom setup.',
+        )
+    )
+
     declared_arguments.append(
         DeclareLaunchArgument(
             "prefix",
@@ -40,11 +63,35 @@ def generate_launch_description():
         )
     )
 
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "initial_joint_controller",
+            default_value="joint_trajectory_controller",
+            description="Robot controller to start.",
+        )
+    )
+
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "start_joint_controller",
+            default_value="true",
+            description="Enable headless mode for robot control",
+        )
+    )
+
     # Initialize Arguments
     prefix = LaunchConfiguration("prefix")
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
+    controllers_file = LaunchConfiguration("controllers_file")
+    runtime_config_package = LaunchConfiguration("runtime_config_package")
+    initial_joint_controller = LaunchConfiguration("initial_joint_controller")
+    start_joint_controller = LaunchConfiguration("start_joint_controller")
+
+    initial_joint_controllers = PathJoinSubstitution(
+        [FindPackageShare(runtime_config_package), "config", controllers_file]
+    )
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -76,15 +123,19 @@ def generate_launch_description():
             " ",
             "prefix:=",
             prefix,
+            " ",
+            "simulation_controllers:=",
+            initial_joint_controllers,
         ]
     )
+
     robot_description = {"robot_description": robot_description_content}
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[{"use_sim_time": True}, robot_description],
     )
     
     pedestal = PathJoinSubstitution(
@@ -130,6 +181,35 @@ def generate_launch_description():
         arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
     )
 
+    # joint_broad_spawner = Node(
+    #     package="controller_manager",
+    #     executable="spawner",
+    #     arguments=["joint_state_broadcaster"],
+    # )
+
+    # delayed_joint_broad_spawner = RegisterEventHandler(
+    #     event_handler=OnProcessStart(
+    #         target_action=controller_manager,
+    #         on_start=[joint_broad_spawner],
+    #     )
+    # )
+
+    # There may be other controllers of the joints, but this is the initially-started one
+    initial_joint_controller_spawner_started = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[initial_joint_controller, "-c", "/controller_manager"],
+        condition=IfCondition(start_joint_controller),
+    )
+    
+    initial_joint_controller_spawner_stopped = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[initial_joint_controller, "-c", "/controller_manager", "--stopped"],
+        condition=UnlessCondition(start_joint_controller),
+    )
+
+
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -143,8 +223,9 @@ def generate_launch_description():
         spawn_table,
         spawn_cube,
         spawn_robot,
-        joint_state_broadcaster_spawner,
-        robot_controller_spawner,
+        # joint_state_broadcaster_spawner,
+        # initial_joint_controller_spawner_stopped,
+        # initial_joint_controller_spawner_started,
     ]
 
     return LaunchDescription(declared_arguments + nodes)
