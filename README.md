@@ -122,6 +122,8 @@ ros2 run ur3_move ur3_task5 --episodes 1000
 ```
 - Trains the robot for specified number of episodes
 - Generates a reward plot at the end of training
+- ![image](https://github.com/user-attachments/assets/7b6a2cce-dda5-497d-a123-87351848a563)
+
 
 ## Troubleshooting
 
