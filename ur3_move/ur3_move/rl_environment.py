@@ -10,7 +10,7 @@ from std_msgs.msg import Float64
 class UR3RLEnvironment(Node):
     def __init__(self):
         super().__init__('ur3_rl_environment')
-        
+
         # Joint names for UR3
         self.joint_names = [
             'shoulder_pan_joint', 
@@ -44,7 +44,7 @@ class UR3RLEnvironment(Node):
         self.joint_positions_received = False
         
         # Initialize other RL variables
-        self.goal_position = np.array([0.03, -0.385, 0.03])  # Example goal position
+        self.goal_position = np.array([0.03, -0.385, 0.03]) 
         self.step_size = 0.1
         self.tolerance = 0.02
         self.max_steps = 100
@@ -137,7 +137,7 @@ class UR3RLEnvironment(Node):
         
         # Wait a little bit to ensure the movement is complete
         # rclpy.spin_once(self, timeout_sec=3)
-        time.sleep(3)
+        # time.sleep(3)
         
         # Print joint information after moving
         # self.print_joint_info(joint_movements)

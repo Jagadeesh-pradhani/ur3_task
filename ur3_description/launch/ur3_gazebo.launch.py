@@ -181,48 +181,6 @@ def generate_launch_description():
         arguments=["joint_state_broadcaster",],
     )
 
-    robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
-    controller_manager = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[robot_description,
-                    initial_joint_controllers]
-    )
-
-    delayed_controller_manager = TimerAction(period=3.0, actions=[controller_manager])
-
-    joint_broad_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster"],
-    )
-
-    delayed_joint_broad_spawner = RegisterEventHandler(
-        event_handler=OnProcessStart(
-            target_action=controller_manager,
-            on_start=[joint_broad_spawner],
-        )
-    )
-
-    joint_trajectory_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=[
-            'joint_trajectory_controller',
-            '--param-file',
-            initial_joint_controllers,
-            ],
-    )
-
-    delayed_joint_trajectory_controller_spawner = RegisterEventHandler(
-        event_handler=OnProcessStart(
-            target_action=controller_manager,
-            on_start=[joint_trajectory_controller_spawner],
-        )
-    )
-
-
-    # There may be other controllers of the joints, but this is the initially-started one
     initial_joint_controller_spawner_started = Node(
         package="controller_manager",
         executable="spawner",
@@ -238,11 +196,6 @@ def generate_launch_description():
     )
 
 
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["forward_position_controller", "--controller-manager", "/controller_manager"],
-    )
 
     nodes = [
         gazebo,
@@ -254,9 +207,7 @@ def generate_launch_description():
         spawn_robot,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
-        # delayed_controller_manager,
-        # delayed_joint_broad_spawner,
-        # delayed_joint_trajectory_controller_spawner,
+
         
 
     ]
