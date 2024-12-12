@@ -5,6 +5,7 @@ from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 import numpy as np
 from .forward_kinematics import UR3ForwardKinematics
 import time
+from std_msgs.msg import Float64
 
 class UR3RLEnvironment(Node):
     def __init__(self):
@@ -32,7 +33,9 @@ class UR3RLEnvironment(Node):
         
         # Publisher for joint trajectory
         self.joint_pub = self.create_publisher(JointTrajectory, '/joint_trajectory_controller/joint_trajectory', 10)
-        
+        self.episode_pub = self.create_publisher(Float64, '/ur3/qlearn/episode', 10)
+        self.reward_pub = self.create_publisher(Float64, '/ur3/qlearn/reward', 10)
+
         # Subscriber for joint states
         self.joint_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
         
