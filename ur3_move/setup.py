@@ -22,6 +22,9 @@ setup(
         'console_scripts': [
             'ur3_JTC = ur3_move.ur3_JTC:main',
             'ur3_FPC = ur3_move.ur3_FPC:main',
+            'ur3_Formula = ur3_move.ur3_formula:main',
+            'ur3_Task4 = ur3_move.ur3_task4:main',
+            'train = ur3_move.train_q_learning:main',
         ],
     },
 )
