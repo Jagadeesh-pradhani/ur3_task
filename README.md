@@ -135,11 +135,3 @@ ros2 launch ur3_description ur3_gazebo.launch.py gz_version:=8
 - Press `Ctrl+C` to close terminals
 - In Task 2, select `7` to exit the movement interface
 
-## Contributing
-Please read the contribution guidelines before making any changes.
-
-## License
-[Add License Information]
-
-## Contact
-[Add Contact Information]
